@@ -1,0 +1,17 @@
+{
+    "name": "Strava Cumulative Elevation",
+    "description": "Show cumulative elevation on an activity or route map.",
+    "version": "1.0",
+    "manifest_version": 3,
+    "oauth2": {},
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://www.strava.com/activities/*"],
+            "js": ["content-script.js"]
+        }
+    ],
+    "permissions": ["storage", "webRequest", "identity", "tabs", "https://strava.com"]
+}
