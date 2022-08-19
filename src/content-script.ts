@@ -1,21 +1,21 @@
 const path = window.location.pathname;
 const activityId = path.split("/")[2];
 
-let elevationThing: Array<{ distance: string; elevation: number; elevationGain: number }>;
+let activityData: Array<{ distance: string; elevation: number; elevationGain: number }>;
 
 const elevationChartObserver = new MutationObserver(() => {
     const infoBox = document.getElementById("infoBox");
-    if (infoBox !== null && Array.isArray(elevationThing)) {
+    if (infoBox !== null && Array.isArray(activityData)) {
         // We'll be editing the elevation chart so unobserve during edit to stop infinite loops.
         elevationChartObserver.disconnect();
 
-        const distance = document.getElementById("infobox-text-distance");
-        const distanceValue = distance?.querySelector(".value")?.textContent;
+        const distanceElement = document.getElementById("infobox-text-distance");
+        const distanceValue = distanceElement?.querySelector(".value")?.textContent;
 
-        const elevation = document.getElementById("infobox-text-altitude");
-        const elevationValue = parseInt(elevation?.querySelector(".value")?.textContent ?? "");
+        const elevationElement = document.getElementById("infobox-text-altitude");
+        const elevationValue = parseInt(elevationElement?.querySelector(".value")?.textContent ?? "");
 
-        const elevationAtPoint = elevationThing.find(
+        const elevationAtPoint = activityData.find(
             ({ distance, elevation }) => distance === distanceValue && elevation === elevationValue
         );
 
@@ -35,7 +35,7 @@ const elevationChartObserver = new MutationObserver(() => {
                 title.setAttribute("class", "title");
                 title.setAttribute("pointer-events", "none");
                 title.append(" Gain: ");
-                elevation?.append(title);
+                elevationElement?.append(title);
 
                 const value = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
                 value.setAttribute("class", "value");
@@ -43,7 +43,7 @@ const elevationChartObserver = new MutationObserver(() => {
                 value.setAttribute("pointer-events", "none");
                 value.setAttribute("font-weight", "bold");
                 value.append(elevationString);
-                elevation?.append(value);
+                elevationElement?.append(value);
             }
         }
 
@@ -62,23 +62,22 @@ elevationChartObserver.observe(document.getElementById("elevation-profile")!, { 
  */
 chrome.runtime.sendMessage({ activityId }, function (response) {
     const elevationArray: Array<{ elevation: number; distance: string }> = response.elevationArray;
-    const thing = elevationArray.reduce<Array<{ distance: string; elevation: number; elevationGain: number }>>(
-        (acc, elevationArrayItem, index) => {
-            const { elevation, distance } = elevationArrayItem;
-            const cumulativeSoFar = acc[acc.length - 1]?.elevationGain ?? 0;
-            let nextGain = cumulativeSoFar;
-            if (index < elevationArray.length - 1) {
-                const { elevation: nextElevation } = elevationArray[index + 1];
-                const difference = nextElevation - elevation;
-                if (difference < 0) {
-                    nextGain = cumulativeSoFar;
-                } else {
-                    nextGain = cumulativeSoFar + difference;
-                }
+    const dataWithCumulativeGain = elevationArray.reduce<
+        Array<{ distance: string; elevation: number; elevationGain: number }>
+    >((acc, elevationArrayItem, index) => {
+        const { elevation, distance } = elevationArrayItem;
+        const cumulativeSoFar = acc[acc.length - 1]?.elevationGain ?? 0;
+        let nextGain = cumulativeSoFar;
+        if (index < elevationArray.length - 1) {
+            const { elevation: nextElevation } = elevationArray[index + 1];
+            const difference = nextElevation - elevation;
+            if (difference < 0) {
+                nextGain = cumulativeSoFar;
+            } else {
+                nextGain = cumulativeSoFar + difference;
             }
-            return [...acc, { distance, elevation, elevationGain: nextGain }];
-        },
-        []
-    );
-    elevationThing = thing;
+        }
+        return [...acc, { distance, elevation, elevationGain: nextGain }];
+    }, []);
+    activityData = dataWithCumulativeGain;
 });
