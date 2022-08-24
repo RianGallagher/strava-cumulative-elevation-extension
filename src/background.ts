@@ -62,12 +62,29 @@ chrome.runtime.onMessage.addListener(function (request, _sender, sendResponse) {
         );
 
         const [distance, elevation]: [{ data: number[] }, { data: number[] }] = await result.json();
-        const elevationArray = elevation.data.map((elevation, index) => ({
-            elevation,
-            distance: `${(distance.data[index] / 1000).toFixed(1)} km`,
-        }));
+        const elevationArray = elevation.data;
+        const distanceArray = distance.data;
 
-        sendResponse({ elevationArray });
+        const activityData = elevationArray.reduce<
+            Array<{ distance: string; elevation: number; elevationGain: number }>
+        >((acc, elevation, index) => {
+            const cumulativeSoFar = acc[acc.length - 1]?.elevationGain ?? 0;
+            let elevationGain = cumulativeSoFar;
+
+            if (index < elevationArray.length - 1) {
+                const nextElevation = elevationArray[index + 1];
+                const difference = nextElevation - elevation;
+
+                if (difference > 0) {
+                    elevationGain = cumulativeSoFar + difference;
+                }
+            }
+
+            const distance = `${(distanceArray[index] / 1000).toFixed(1)} km`;
+            return [...acc, { distance, elevation, elevationGain }];
+        }, []);
+
+        sendResponse({ activityData });
     };
 
     if (typeof request.activityId === "string") {
