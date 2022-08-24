@@ -37,6 +37,36 @@ const getToken = async () => {
 };
 
 /**
+ * Format the activity data to include distance, elevation and cumulative elevation.
+ * @param elevationArray The array of elevation at different points in the activity.
+ * @param distanceArray  The array of distance at different points in the activity.
+ * @returns An array of objects containing distance, elevation and elevation gain.
+ */
+const formatActivityData = (elevationArray: number[], distanceArray: number[]) => {
+    const activityData = elevationArray.reduce<Array<{ distance: string; elevation: number; elevationGain: number }>>(
+        (acc, elevation, index) => {
+            const cumulativeSoFar = acc[acc.length - 1]?.elevationGain ?? 0;
+            let elevationGain = cumulativeSoFar;
+
+            if (index < elevationArray.length - 1) {
+                const nextElevation = elevationArray[index + 1];
+                const difference = nextElevation - elevation;
+
+                if (difference > 0) {
+                    elevationGain = cumulativeSoFar + difference;
+                }
+            }
+
+            const distance = `${(distanceArray[index] / 1000).toFixed(1)} km`;
+            return [...acc, { distance, elevation, elevationGain }];
+        },
+        []
+    );
+
+    return activityData;
+};
+
+/**
  * When the extension if first installed, open a HTML file which invites the user to log in to Strava and give the
  * required permissions to the extension.
  */
@@ -62,27 +92,8 @@ chrome.runtime.onMessage.addListener(function (request, _sender, sendResponse) {
         );
 
         const [distance, elevation]: [{ data: number[] }, { data: number[] }] = await result.json();
-        const elevationArray = elevation.data;
-        const distanceArray = distance.data;
 
-        const activityData = elevationArray.reduce<
-            Array<{ distance: string; elevation: number; elevationGain: number }>
-        >((acc, elevation, index) => {
-            const cumulativeSoFar = acc[acc.length - 1]?.elevationGain ?? 0;
-            let elevationGain = cumulativeSoFar;
-
-            if (index < elevationArray.length - 1) {
-                const nextElevation = elevationArray[index + 1];
-                const difference = nextElevation - elevation;
-
-                if (difference > 0) {
-                    elevationGain = cumulativeSoFar + difference;
-                }
-            }
-
-            const distance = `${(distanceArray[index] / 1000).toFixed(1)} km`;
-            return [...acc, { distance, elevation, elevationGain }];
-        }, []);
+        const activityData = formatActivityData(elevation.data, distance.data);
 
         sendResponse({ activityData });
     };
