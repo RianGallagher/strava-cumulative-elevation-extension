@@ -2,7 +2,8 @@ const CLIENT_ID = 36878;
 const CLIENT_SECRET = "9b4967784e1f5e505f5c649d0afaf6c17be1470a";
 
 const isTokenExpired = (expiresAt: number) => {
-    const timeNow = new Date().getSeconds();
+    // expiresAt is stored as seconds since epoch so the current date needs to be same format.
+    const timeNow = new Date().getTime() / 1000;
     return timeNow > expiresAt;
 };
 
