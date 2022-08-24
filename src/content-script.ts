@@ -10,7 +10,8 @@ chrome.runtime.sendMessage({ activityId }, function (response) {
     activityData = response.activityData;
 });
 
-const elevationChartObserver = new MutationObserver(() => {
+const elevationChartObserver = new MutationObserver((mutationRecords) => {
+    const elevationProfile = mutationRecords[mutationRecords.length - 1].target;
     const infoBox = document.getElementById("infoBox");
     if (infoBox !== null && Array.isArray(activityData)) {
         // We'll be editing the elevation chart so unobserve during edit to stop infinite loops.
@@ -54,11 +55,11 @@ const elevationChartObserver = new MutationObserver(() => {
             }
         }
 
-        elevationChartObserver.observe(document.getElementById("elevation-profile")!, {
-            childList: true,
-            subtree: true,
-        });
+        elevationChartObserver.observe(elevationProfile, { childList: true, subtree: true });
     }
 });
 
-elevationChartObserver.observe(document.getElementById("elevation-profile")!, { childList: true, subtree: true });
+const elevationProfile = document.getElementById("elevation-profile");
+if (elevationProfile !== null) {
+    elevationChartObserver.observe(elevationProfile, { childList: true, subtree: true });
+}
