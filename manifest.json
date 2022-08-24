@@ -12,5 +12,5 @@
             "js": ["content-script.js"]
         }
     ],
-    "permissions": ["storage", "webRequest", "identity", "tabs", "https://strava.com"]
+    "permissions": ["storage", "webRequest", "identity", "tabs"]
 }
