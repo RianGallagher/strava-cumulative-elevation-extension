@@ -7,7 +7,7 @@ const isTokenExpired = function (expiresAt: number) {
 };
 
 const getNewToken = async function () {
-    const { refreshToken } = await chrome.storage.local.get(["token", "refreshToken", "expiresAt"]);
+    const { refreshToken } = await chrome.storage.local.get(["refreshToken"]);
 
     const result = await fetch("https://www.strava.com/api/v3/oauth/token", {
         method: "post",
