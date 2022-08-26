@@ -1,18 +1,10 @@
+import { CLIENT_ID, CLIENT_SECRET, STRAVA_URL } from "./constants.js";
+
 const authenticate = () => {
-    const REDIRECT_URL = `https://${chrome.runtime.id}.chromiumapp.org/provider_cb`;
-    const SCOPE = "activity:read_all";
-    const CLIENT_ID = 36878;
-    const CLIENT_SECRET = "9b4967784e1f5e505f5c649d0afaf6c17be1470a";
+    const redirectUrl = `https://${chrome.runtime.id}.chromiumapp.org/provider_cb`;
+    const url = STRAVA_URL.replace(":redirectUrl", encodeURIComponent(redirectUrl));
 
-    const url = `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(
-        REDIRECT_URL
-    )}/exchange_token&approval_prompt=force&scope=${SCOPE}`;
-    console.log(`url`, url);
-
-    const options = {
-        interactive: true,
-        url,
-    };
+    const options = { interactive: true, url };
 
     chrome.identity.launchWebAuthFlow(options, async function (redirectUri) {
         if (chrome.runtime.lastError) {
@@ -21,11 +13,8 @@ const authenticate = () => {
             return;
         }
 
-        console.log(`redirectUri`, redirectUri);
-
         const searchParams = new URLSearchParams(redirectUri);
         const code = searchParams.get("code");
-        console.log(`code`, code);
 
         const result = await fetch("https://www.strava.com/api/v3/oauth/token", {
             method: "post",
