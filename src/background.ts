@@ -15,8 +15,8 @@ chrome.runtime.onInstalled.addListener(async () => {
 /**
  * Listen for the content script message with the activity ID and request the elevation data for that activity.
  */
-chrome.runtime.onMessage.addListener(function (request, _sender, sendResponse) {
-    const fetchStravaElevation = async () => {
+chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+    const fetchActivityElevation = async () => {
         const token = await getToken();
 
         const fetchOptions = { headers: { authorization: `Bearer ${token}` } };
@@ -32,8 +32,29 @@ chrome.runtime.onMessage.addListener(function (request, _sender, sendResponse) {
         sendResponse({ activityData });
     };
 
-    if (typeof request.activityId === "string") {
-        fetchStravaElevation();
+    const fetchRouteElevation = async () => {
+        const token = await getToken();
+
+        const fetchOptions = { headers: { authorization: `Bearer ${token}` } };
+        const result = await fetch(
+            `https://www.strava.com/api/v3/routes/${request.routeId}/streams?keys=altitude`,
+            fetchOptions
+        );
+
+        const [, elevation, distance]: [{ data: number[] }, { data: number[] }, { data: number[] }] =
+            await result.json();
+
+        const activityData = formatActivityData(elevation.data, distance.data);
+
+        sendResponse({ activityData });
+    };
+
+    if (typeof request?.activityId === "string") {
+        fetchActivityElevation();
+    }
+
+    if (typeof request?.routeId === "string") {
+        fetchRouteElevation();
     }
 
     return true;

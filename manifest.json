@@ -9,7 +9,7 @@
     },
     "content_scripts": [
         {
-            "matches": ["https://www.strava.com/activities/*"],
+            "matches": ["https://www.strava.com/activities/*", "https://www.strava.com/routes/*"],
             "js": ["content-script.js"]
         }
     ],

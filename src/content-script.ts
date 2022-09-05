@@ -1,4 +1,5 @@
 const path = window.location.pathname;
+const [, endPoint, id] = path.split("/");
 const activityId = path.split("/")[2];
 
 let activityData: Array<{ distance: string; elevation: number; elevationGain: number }>;
@@ -6,9 +7,42 @@ let activityData: Array<{ distance: string; elevation: number; elevationGain: nu
 /**
  * Send the background script the activityId so it can request the elevation data for the activity and format the data.
  */
-chrome.runtime.sendMessage({ activityId }, function (response) {
-    activityData = response.activityData;
-});
+if (endPoint === "activities") {
+    chrome.runtime.sendMessage({ activityId: id }, function (response) {
+        activityData = response.activityData;
+    });
+}
+
+/**
+ * Send the background script the routeId so it can request the elevation data for the route and format the data.
+ */
+if (endPoint === "routes") {
+    chrome.runtime.sendMessage({ routeId: id }, function (response) {
+        activityData = response.activityData;
+    });
+}
+
+const findElevationAtPoint = (elevationElement: HTMLElement | null) => {
+    if (endPoint === "activities") {
+        const distanceElement = document.getElementById("infobox-text-distance");
+        const distanceValue = distanceElement?.querySelector(".value")?.textContent;
+
+        // const elevationElement = document.getElementById("infobox-text-altitude");
+        const elevationValue = parseInt(elevationElement?.querySelector(".value")?.textContent ?? "");
+
+        return activityData.find(
+            ({ distance, elevation }) => distance === distanceValue && elevation === elevationValue
+        );
+    } else {
+        const distanceValue = document.querySelector(".crossbar-text")?.textContent ?? "";
+        // const distanceValue = distanceElement?.querySelector(".value")?.textContent;
+
+        // const elevationElement = document.getElementById("infobox-text-Elev");
+        // const elevationValue = parseInt(elevationElement?.querySelector(".value")?.textContent ?? "");
+
+        return activityData.find(({ distance }) => distance === distanceValue);
+    }
+};
 
 const elevationChartObserver = new MutationObserver((mutationRecords) => {
     const elevationProfile = mutationRecords[mutationRecords.length - 1].target;
@@ -17,15 +51,19 @@ const elevationChartObserver = new MutationObserver((mutationRecords) => {
         // We'll be editing the elevation chart so unobserve during edit to stop infinite loops.
         elevationChartObserver.disconnect();
 
-        const distanceElement = document.getElementById("infobox-text-distance");
-        const distanceValue = distanceElement?.querySelector(".value")?.textContent;
+        // const distanceElement = document.getElementById("infobox-text-distance");
+        // const distanceValue = distanceElement?.querySelector(".value")?.textContent;
 
-        const elevationElement = document.getElementById("infobox-text-altitude");
-        const elevationValue = parseInt(elevationElement?.querySelector(".value")?.textContent ?? "");
+        // const elevationElement = document.getElementById("infobox-text-altitude");
+        // const elevationValue = parseInt(elevationElement?.querySelector(".value")?.textContent ?? "");
 
-        const elevationAtPoint = activityData.find(
-            ({ distance, elevation }) => distance === distanceValue && elevation === elevationValue
+        // const elevationAtPoint = activityData.find(
+        //     ({ distance, elevation }) => distance === distanceValue && elevation === elevationValue
+        // );
+        const elevationElement = document.getElementById(
+            endPoint === "activities" ? "infobox-text-altitude" : "infobox-text-Elev"
         );
+        const elevationAtPoint = findElevationAtPoint(elevationElement);
 
         if (typeof elevationAtPoint !== "undefined") {
             const { elevationGain } = elevationAtPoint;
@@ -39,19 +77,19 @@ const elevationChartObserver = new MutationObserver((mutationRecords) => {
                 // Increase the width to fit the gain value.
                 infoBox.querySelector("rect")?.setAttribute("width", "175");
 
-                const title = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                title.setAttribute("class", "title");
-                title.setAttribute("pointer-events", "none");
-                title.append(" Gain: ");
-                elevationElement?.append(title);
+                if (elevationElement !== null) {
+                    const title = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                    title.setAttribute("pointer-events", "none");
+                    title.append(" Gain: ");
+                    elevationElement.append(title);
 
-                const value = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                value.setAttribute("class", "value");
-                value.setAttribute("id", "cumulative-elevation-value");
-                value.setAttribute("pointer-events", "none");
-                value.setAttribute("font-weight", "bold");
-                value.append(elevationString);
-                elevationElement?.append(value);
+                    const value = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                    value.setAttribute("id", "cumulative-elevation-value");
+                    value.setAttribute("pointer-events", "none");
+                    value.setAttribute("font-weight", "bold");
+                    value.append(elevationString);
+                    elevationElement.append(value);
+                }
             }
         }
 
@@ -59,7 +97,8 @@ const elevationChartObserver = new MutationObserver((mutationRecords) => {
     }
 });
 
-const elevationProfile = document.getElementById("elevation-profile");
+const elevationProfile =
+    endPoint === "activities" ? document.getElementById("elevation-profile") : document.querySelector(".chartGroup");
 if (elevationProfile !== null) {
     elevationChartObserver.observe(elevationProfile, { childList: true, subtree: true });
 }
