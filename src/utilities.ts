@@ -31,7 +31,7 @@ const getNewToken = async function () {
  * Get the Strava API access token from local storage or, if it's expired, request a new token with the refresh token.
  * @returns Access token for making request to the Strava API.
  */
-export const getToken = async function () {
+const getToken = async function () {
     const { token, expiresAt } = await chrome.storage.local.get(["token", "expiresAt"]);
     if (isTokenExpired(expiresAt)) {
         const newToken = await getNewToken();
@@ -39,6 +39,18 @@ export const getToken = async function () {
     }
 
     return token;
+};
+
+export const fetchElevationData = async (request: any) => {
+    const token = await getToken();
+
+    const fetchOptions = { headers: { authorization: `Bearer ${token}` } };
+
+    const route = typeof request?.activityId === "string" ? "activities" : "routes";
+    const id = typeof request?.activityId === "string" ? request.activityId : request.routeId;
+
+    const result = await fetch(`https://www.strava.com/api/v3/${route}/${id}/streams?keys=altitude`, fetchOptions);
+    return await result.json();
 };
 
 /**

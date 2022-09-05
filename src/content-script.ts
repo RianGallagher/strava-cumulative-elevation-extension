@@ -1,6 +1,5 @@
 const path = window.location.pathname;
 const [, endPoint, id] = path.split("/");
-const activityId = path.split("/")[2];
 
 let activityData: Array<{ distance: string; elevation: number; elevationGain: number }>;
 
@@ -27,7 +26,6 @@ const findElevationAtPoint = (elevationElement: HTMLElement | null) => {
         const distanceElement = document.getElementById("infobox-text-distance");
         const distanceValue = distanceElement?.querySelector(".value")?.textContent;
 
-        // const elevationElement = document.getElementById("infobox-text-altitude");
         const elevationValue = parseInt(elevationElement?.querySelector(".value")?.textContent ?? "");
 
         return activityData.find(
@@ -35,11 +33,6 @@ const findElevationAtPoint = (elevationElement: HTMLElement | null) => {
         );
     } else {
         const distanceValue = document.querySelector(".crossbar-text")?.textContent ?? "";
-        // const distanceValue = distanceElement?.querySelector(".value")?.textContent;
-
-        // const elevationElement = document.getElementById("infobox-text-Elev");
-        // const elevationValue = parseInt(elevationElement?.querySelector(".value")?.textContent ?? "");
-
         return activityData.find(({ distance }) => distance === distanceValue);
     }
 };
@@ -51,15 +44,6 @@ const elevationChartObserver = new MutationObserver((mutationRecords) => {
         // We'll be editing the elevation chart so unobserve during edit to stop infinite loops.
         elevationChartObserver.disconnect();
 
-        // const distanceElement = document.getElementById("infobox-text-distance");
-        // const distanceValue = distanceElement?.querySelector(".value")?.textContent;
-
-        // const elevationElement = document.getElementById("infobox-text-altitude");
-        // const elevationValue = parseInt(elevationElement?.querySelector(".value")?.textContent ?? "");
-
-        // const elevationAtPoint = activityData.find(
-        //     ({ distance, elevation }) => distance === distanceValue && elevation === elevationValue
-        // );
         const elevationElement = document.getElementById(
             endPoint === "activities" ? "infobox-text-altitude" : "infobox-text-Elev"
         );
