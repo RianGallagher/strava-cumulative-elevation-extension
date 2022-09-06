@@ -2,6 +2,7 @@ const path = window.location.pathname;
 const [, endPoint, id] = path.split("/");
 
 let activityData: Array<{ distance: string; elevation: number; elevationGain: number }>;
+let isElevationObserverActive = false;
 
 /**
  * Send the background script the activityId so it can request the elevation data for the activity and format the data.
@@ -81,8 +82,29 @@ const elevationChartObserver = new MutationObserver((mutationRecords) => {
     }
 });
 
-const elevationProfile =
-    endPoint === "activities" ? document.getElementById("elevation-profile") : document.querySelector(".chartGroup");
-if (elevationProfile !== null) {
-    elevationChartObserver.observe(elevationProfile, { childList: true, subtree: true });
-}
+const getElevationProfileElement = () => {
+    if (endPoint === "activities") {
+        return document.getElementById("elevation-profile");
+    }
+
+    return document.querySelector(".chartGroup");
+};
+
+const pageObserver = new MutationObserver(() => {
+    const elevationProfile = getElevationProfileElement();
+    if (isElevationObserverActive === false && elevationProfile !== null) {
+        elevationChartObserver.observe(elevationProfile, { childList: true, subtree: true });
+        isElevationObserverActive = true;
+    }
+
+    if (isElevationObserverActive === true && elevationProfile === null) {
+        isElevationObserverActive = false;
+    }
+});
+
+window.addEventListener("load", () => {
+    const page = document.querySelector(".page");
+    if (page !== null) {
+        pageObserver.observe(page, { childList: true, subtree: true });
+    }
+});
