@@ -5,7 +5,7 @@
     "main": "background.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "build": "tsc && cp manifest.json dist/ && cp index.html dist/",
+        "build": "tsc && cp manifest.json dist/ && cp index.html dist/ && cp mountains.png dist/",
         "build-extension": "npm run build && cp manifest.json dist/"
     },
     "keywords": [],

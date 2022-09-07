@@ -13,5 +13,8 @@
             "js": ["content-script.js"]
         }
     ],
-    "permissions": ["storage", "webRequest", "identity", "tabs"]
+    "permissions": ["storage", "webRequest", "identity", "tabs"],
+    "icons": {
+        "128": "mountains.png"
+    }
 }
