@@ -6,10 +6,18 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Strava Cumulative Elevation Authentication</title>
         <script defer type="module" src="index.js"></script>
+        <link rel="stylesheet" href="style.css"></link>
     </head>
     <body>
-        <div>
-            <button id="sign-in">Sign In</button>
+        <div class="description">
+            <p>
+                To show elevation gain in activities, the extension needs to ask Strava for the elevation data for the
+                activity. Your permission is needed for this so please sign in to Strava. This only gives the extension
+                permission to request data for <em>your</em> activities so you will not be able to see the cumulative elevation
+                data for someone else's activities. You will, however, be able to see the elevation gain on any public
+                route.
+            </p>
+            <button class="strava-sign-in-button" id="sign-in">Sign in to Strava</button>
         </div>
     </body>
 </html>

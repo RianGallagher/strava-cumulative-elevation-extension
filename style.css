@@ -1,0 +1,13 @@
+.description {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 50%;
+    margin: auto;
+}
+
+.strava-sign-in-button {
+    cursor: pointer;
+    flex-grow: 0;
+    flex-shrink: 1;
+}
